@@ -112,11 +112,9 @@ func CustomLevelEncoder(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) 
 }
 
 type MessageStatus struct {
-	Message        string `json:"message,omitempty"`
-	QuotaRemaining int    `json:"quota_remaining,omitempty"`
-	OTP            string `json:"otp,omitempty"`
-	TextID         string `json:"text_id,omitempty"`
-	Error          bool   `json:"error"`
+	Message string      `json:"message,omitempty"`
+	Error   bool        `json:"error"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 func ResponseStatus(c *gin.Context, code int, response interface{}) {
