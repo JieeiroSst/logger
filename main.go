@@ -2,10 +2,13 @@ package logger
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/render"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel"
@@ -106,4 +109,24 @@ func SyslogTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 
 func CustomLevelEncoder(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString("[" + level.CapitalString() + "]")
+}
+
+type MessageStatus struct {
+	Message        string `json:"message,omitempty"`
+	QuotaRemaining int    `json:"quota_remaining,omitempty"`
+	OTP            string `json:"otp,omitempty"`
+	TextID         string `json:"text_id,omitempty"`
+	Error          bool   `json:"error"`
+}
+
+func ResponseStatus(c *gin.Context, code int, response interface{}) {
+	data, err := json.Marshal(response)
+	if err != nil {
+		panic(err)
+	}
+	c.Render(
+		code, render.Data{
+			ContentType: "application/json",
+			Data:        data,
+		})
 }
