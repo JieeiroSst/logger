@@ -25,3 +25,22 @@ sugarLogger := logger.ConfigZap()
 sugarLogger.Infow("Get the time now with format","time",time.Now().Format("2006-January-02"))
 sugarLogger.Infof("Today is :%s",time.Now().Format("2006-January-02"))
 ```
+
+```
+Pagination
+
+type CategoryGorm struct {  
+    db *gorm.DB 
+}   
+
+func (cg *CategoryGorm) List(pagination Pagination) (*Pagination, error) {  
+    var categories []*Category  
+
+    cg.db.Scopes(paginate(categories,&pagination, cg.db)).Find(&categories) 
+    pagination.Rows = categories    
+
+    return &pagination, nil 
+}   
+
+http://localhost:3000/categories?limit=10&page=5
+```

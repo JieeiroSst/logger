@@ -3,6 +3,7 @@ module github.com/JieeiroSst/logger
 go 1.22.2
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/prometheus/client_golang v1.20.4
 	go.opentelemetry.io/otel v1.30.0
@@ -11,6 +12,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.30.0
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.66.1
+	gorm.io/gorm v1.25.12
 )
 
 require (
@@ -31,6 +33,8 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.22.0 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
