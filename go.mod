@@ -7,6 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/hashicorp/consul/api v1.29.4
 	github.com/prometheus/client_golang v1.20.4
+	github.com/sony/gobreaker v1.0.0
 	go.opentelemetry.io/otel v1.30.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.30.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.30.0

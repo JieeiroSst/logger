@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"log"
 	"math"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sony/gobreaker"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -288,4 +290,47 @@ func (c *configConsul) ConnectConfigConsul() ([]byte, error) {
 	}
 
 	return redisPattern.Value, nil
+}
+
+type ClientCircuitBreakerProxy struct {
+	logger *log.Logger
+	gb     *gobreaker.CircuitBreaker
+}
+
+func shouldBeSwitchedToOpen(counts gobreaker.Counts) bool {
+	failureRatio := float64(counts.TotalFailures) / float64(counts.Requests)
+	return counts.Requests >= 3 && failureRatio >= 0.6
+}
+
+func NewClientCircuitBreakerProxy() *ClientCircuitBreakerProxy {
+	logger := log.New(os.Stdout, "CB\t", log.LstdFlags)
+
+	cfg := gobreaker.Settings{
+		Interval:    5 * time.Second,
+		Timeout:     7 * time.Second,
+		ReadyToTrip: shouldBeSwitchedToOpen,
+		OnStateChange: func(_ string, from gobreaker.State, to gobreaker.State) {
+			logger.Println("state changed from", from.String(), "to", to.String())
+		},
+	}
+
+	return &ClientCircuitBreakerProxy{
+		logger: logger,
+		gb:     gobreaker.NewCircuitBreaker(cfg),
+	}
+}
+
+func (c *ClientCircuitBreakerProxy) Send(endpoint string) (interface{}, error) {
+	data, err := c.gb.Execute(func() (interface{}, error) {
+		resp, err := http.Get(endpoint)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return string(body), err
+	})
+	return data, err
 }
