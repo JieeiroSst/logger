@@ -20,6 +20,7 @@ import (
 	"github.com/gin-gonic/gin/render"
 	"github.com/go-redis/redis"
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/nats-io/nats.go"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sony/gobreaker"
@@ -400,4 +401,11 @@ func (h *cacheHelper) Set(ctx context.Context, key string, value interface{}, ex
 	}
 	_ = h.resdis.Set(key, data, exppiration)
 	return nil
+}
+
+func ConnectNats(dns string) *nats.Conn {
+	nc, _ := nats.Connect(dns)
+	defer nc.Close()
+
+	return nc
 }
