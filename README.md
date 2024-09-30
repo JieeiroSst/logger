@@ -10,13 +10,16 @@ library
 
 "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 ```
+
+```
 func main() {
-	r := gin.Default()
+    r := gin.Default()
     cleanup := logger.InitSigNozTracer()
-	defer cleanup(context.Background())
-	r.Use(logger.Middleware(serviceName))
+    defer cleanup(context.Background())
+    r.Use(logger.Middleware(serviceName))
     r.Use(otelgin.Middleware(serviceName))
 }
+```
 
 Logger
 ```
