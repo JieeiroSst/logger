@@ -19,6 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
 	"github.com/go-redis/redis"
+	"github.com/golang-jwt/jwt"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/nats-io/nats.go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -408,4 +409,81 @@ func ConnectNats(dns string) *nats.Conn {
 	defer nc.Close()
 
 	return nc
+}
+
+var (
+	PasswordFailed = errors.New("password does not satisfy the condition")
+	EmailFailed    = errors.New("email does not satisfy the condition")
+	IPFailed       = errors.New("IP does not satisfy the condition")
+
+	HashPasswordFailed = errors.New("password failed")
+	UserAlready        = errors.New("user already exists")
+
+	FailedToken = errors.New("Missing Authentication Token")
+
+	FailedTokenUsername = errors.New("Missing Authentication Username Token")
+
+	NotFound = errors.New("Not Found")
+
+	LockAccountFailed = errors.New("lock account failed")
+
+	UserNotExist = errors.New("user does not exist")
+
+	UserExist = errors.New("user does exist")
+)
+
+type Token struct {
+	EncodeToken string
+}
+
+type ParseToken struct {
+	Username string
+}
+
+type Tokens interface {
+	GenerateToken(username string) (string, error)
+	ParseToken(tokenStr string) (*ParseToken, error)
+}
+
+type token struct {
+	jwtSecretKey string
+}
+
+func NewToken(jwtSecretKey string) Tokens {
+	return &token{
+		jwtSecretKey: jwtSecretKey,
+	}
+}
+
+func (t *token) GenerateToken(username string) (string, error) {
+	atClaims := jwt.MapClaims{}
+	atClaims["authorized"] = true
+	atClaims["username"] = username
+	atClaims["exp"] = time.Now().Add(time.Minute * 10).Unix()
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+	token, err := at.SignedString([]byte(t.jwtSecretKey))
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (t *token) ParseToken(tokenStr string) (*ParseToken, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(t.jwtSecretKey), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok && !token.Valid {
+		return nil, FailedToken
+	}
+
+	username := claims["username"].(string)
+	return &ParseToken{
+		Username: username,
+	}, nil
 }
