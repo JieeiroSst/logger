@@ -432,33 +432,24 @@ var (
 	UserExist = errors.New("user does exist")
 )
 
-type Token struct {
-	EncodeToken string
-}
-
 type ParseToken struct {
-	Username string
+	Role string
 }
 
-type Tokens interface {
-	GenerateToken(username string) (string, error)
-	ParseToken(tokenStr string) (*ParseToken, error)
-}
-
-type token struct {
+type Token struct {
 	jwtSecretKey string
 }
 
-func NewToken(jwtSecretKey string) Tokens {
-	return &token{
+func NewToken(jwtSecretKey string) *Token {
+	return &Token{
 		jwtSecretKey: jwtSecretKey,
 	}
 }
 
-func (t *token) GenerateToken(username string) (string, error) {
+func (t *Token) GenerateToken(role string) (string, error) {
 	atClaims := jwt.MapClaims{}
 	atClaims["authorized"] = true
-	atClaims["username"] = username
+	atClaims["role"] = role
 	atClaims["exp"] = time.Now().Add(time.Minute * 10).Unix()
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	token, err := at.SignedString([]byte(t.jwtSecretKey))
@@ -468,7 +459,7 @@ func (t *token) GenerateToken(username string) (string, error) {
 	return token, nil
 }
 
-func (t *token) ParseToken(tokenStr string) (*ParseToken, error) {
+func (t *Token) ParseToken(tokenStr string) (*ParseToken, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return []byte(t.jwtSecretKey), nil
 	})
@@ -482,8 +473,7 @@ func (t *token) ParseToken(tokenStr string) (*ParseToken, error) {
 		return nil, FailedToken
 	}
 
-	username := claims["username"].(string)
 	return &ParseToken{
-		Username: username,
+		Role: claims["role"].(string),
 	}, nil
 }
