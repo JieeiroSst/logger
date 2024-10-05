@@ -460,3 +460,17 @@ func (t *Token) ParseToken(tokenStr string) (*ParseToken, error) {
 		Role: claims["role"].(string),
 	}, nil
 }
+
+var countryTz = map[string]string{
+	"Hungary": "Europe/Budapest",
+	"Egypt":   "Africa/Cairo",
+}
+
+func TimeIn() time.Time {
+	name := countryTz["Egypt"]
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		panic(err)
+	}
+	return time.Now().In(loc)
+}
